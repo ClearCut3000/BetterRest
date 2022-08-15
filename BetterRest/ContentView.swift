@@ -24,43 +24,71 @@ struct ContentView: View {
     return Calendar.current.date(from: components) ?? Date.now
   }
 
-    var body: some View {
-      NavigationView {
-        Form {
-          VStack(alignment: .leading, spacing: 0) {
-            Text("When do you want to wake up?")
-              .font(.headline)
-
-            DatePicker("Please enter time", selection: $wakeUp, displayedComponents: .hourAndMinute)
-              .labelsHidden()
-          }
-
-          VStack(alignment: .leading, spacing: 0) {
-            Text("Desired amount of sleep")
-                .font(.headline)
-
-            Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
-          }
-
-          VStack(alignment: .leading, spacing: 0) {
-            Text("Daily coffe intake")
-              .font(.headline)
-
-            Stepper(coffeeAmount == 1 ? "1 cup" : "\(coffeeAmount) cups", value: $coffeeAmount, in: 1...20)
-          }
+  var body: some View {
+    NavigationView {
+      Form {
+        Section {
+          DatePicker("Please enter time", selection: $wakeUp, displayedComponents: .hourAndMinute)
+            .labelsHidden()
+        } header: {
+          Text("When do you want to wake up?")
+            .font(.headline)
         }
-        .navigationTitle("BetterRest")
-        .toolbar {
-          Button("Calculate", action: calculateBedTime)
+
+        Section{
+          Stepper("\(sleepAmount.formatted()) hours", value: $sleepAmount, in: 4...12, step: 0.25)
+        } header: {
+          Text("Desired amount of sleep")
+            .font(.headline)
         }
-        .alert(alertTitle, isPresented: $showingAlert) {
-          Button("OK") { }
-        } message: {
-          Text(alertMessage)
+
+        Section {
+          Picker("Number of cups", selection: $coffeeAmount) {
+            ForEach(0..<20) {
+              Text($0 > 1 ? "\($0) cups" : "\($0) cup")
+            }
+          }
+          .pickerStyle(WheelPickerStyle())
+        } header: {
+          Text("Number of cups")
+            .font(.headline)
+        }
+
+        Section {
+          Button {
+            calculateBedTime()
+          } label: {
+            HStack {
+              Image(systemName: "function")
+                .font(.title)
+              Text("Calculate")
+                .fontWeight(.semibold)
+                .font(.title)
+            }
+          }
+          .frame(minWidth: 0, maxWidth: .infinity)
+          .padding()
+          .foregroundColor(.white)
+          .background(LinearGradient(gradient: Gradient(colors: [Color.red, Color.blue]), startPoint: .leading, endPoint: .trailing))
+          .cornerRadius(40)
         }
       }
+      .navigationTitle("BetterRest")
+      .toolbar {
+        Text(alertMessage != "" ? "Your ideal bedtime is \(alertMessage)" : "")
+          .fontWeight(.bold)
+          .font(.title3)
+          .foregroundColor(.red)
+      }
+      .alert(alertTitle, isPresented: $showingAlert) {
+        Button("OK") { }
+      } message: {
+        Text(alertMessage)
+      }
     }
+  }
 
+  //MARK: - Methods
   func calculateBedTime() {
     do {
       let config = MLModelConfiguration()
@@ -81,7 +109,7 @@ struct ContentView: View {
 }
 
 struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
+  static var previews: some View {
+    ContentView()
+  }
 }
